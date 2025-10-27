@@ -7,4 +7,5 @@ public interface RegionDAO {
     Region save(Region region);
     List<Region> findAll();
     Region findById(Long id);
+    void delete(Region region);
 }

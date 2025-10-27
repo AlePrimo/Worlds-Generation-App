@@ -27,4 +27,9 @@ public class RegionDAOImpl implements RegionDAO {
     public Region findById(Long id) {
         return regionRepository.findById(id).orElse(null);
     }
+
+    @Override
+    public void delete(Region region) {
+        regionRepository.delete(region);
+    }
 }

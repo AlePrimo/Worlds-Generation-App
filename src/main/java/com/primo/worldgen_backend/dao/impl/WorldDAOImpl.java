@@ -28,4 +28,9 @@ public class WorldDAOImpl implements WorldDAO {
     public World findById(Long id) {
         return worldRepository.findById(id).orElse(null);
     }
+
+    @Override
+    public void delete(World world) {
+        worldRepository.delete(world);
+    }
 }

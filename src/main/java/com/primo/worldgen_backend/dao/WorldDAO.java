@@ -7,4 +7,5 @@ public interface WorldDAO {
     World save(World world);
     List<World> findAll();
     World findById(Long id);
+    void delete(World world);
 }

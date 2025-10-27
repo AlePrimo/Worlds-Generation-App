@@ -1,29 +1,31 @@
 package com.primo.worldgen_backend.mappers;
 
-
 import com.primo.worldgen_backend.dto.events.EventRequestDTO;
 import com.primo.worldgen_backend.dto.events.EventResponseDTO;
 import com.primo.worldgen_backend.entities.Event;
-import com.primo.worldgen_backend.entities.Faction;
 
 public class EventMapper {
 
-    public static Event toEntity(EventRequestDTO dto, Faction faction){
+
+
+    public static Event toEntity(EventRequestDTO dto) {
         return Event.builder()
-                .name(dto.getName())
+                .type(dto.getType())
+                .startedAt(dto.getStartedAt())
                 .description(dto.getDescription())
-                .impact(dto.getImpact())
-                .faction(faction)
+                .severity(dto.getSeverity())
+                .active(dto.getActive() != null ? dto.getActive() : true)
                 .build();
     }
 
-    public static EventResponseDTO toDTO(Event event){
+    public static EventResponseDTO toDTO(Event event) {
         return EventResponseDTO.builder()
                 .id(event.getId())
-                .name(event.getName())
+                .type(event.getType())
+                .startedAt(event.getStartedAt())
                 .description(event.getDescription())
-                .impact(event.getImpact())
-                .factionId(event.getFaction()!=null ? event.getFaction().getId() : null)
+                .severity(event.getSeverity())
+                .active(event.isActive())
                 .build();
     }
 }

@@ -1,11 +1,15 @@
 package com.primo.worldgen_backend.service;
 
-import com.primo.worldgen_backend.dto.region.RegionRequestDTO;
-import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
+
+import com.primo.worldgen_backend.entities.Region;
+
 import java.util.List;
 
 public interface RegionService {
-    RegionResponseDTO create(RegionRequestDTO dto);
-    List<RegionResponseDTO> getAll();
-    RegionResponseDTO getById(Long id);
+    Region create(Region region);
+    Region update(Long id, Region region);
+    Region findById(Long id);
+    List<Region> findAll();
+    void delete(Long id);
 }
+

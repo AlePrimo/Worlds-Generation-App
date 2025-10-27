@@ -1,11 +1,14 @@
 package com.primo.worldgen_backend.service;
 
-import com.primo.worldgen_backend.dto.events.EventRequestDTO;
-import com.primo.worldgen_backend.dto.events.EventResponseDTO;
+
+import com.primo.worldgen_backend.entities.Event;
+
 import java.util.List;
 
 public interface EventService {
-    EventResponseDTO create(EventRequestDTO dto);
-    List<EventResponseDTO> getAll();
-    EventResponseDTO getById(Long id);
+    Event create(Event event);
+    Event update(Long id, Event event);
+    Event findById(Long id);
+    List<Event> findAll();
+    void delete(Long id);
 }

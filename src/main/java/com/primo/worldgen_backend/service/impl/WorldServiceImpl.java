@@ -1,37 +1,48 @@
 package com.primo.worldgen_backend.service.impl;
 
-import com.primo.worldgen_backend.dao.WorldDAO;
-import com.primo.worldgen_backend.dto.world.WorldRequestDTO;
-import com.primo.worldgen_backend.dto.world.WorldResponseDTO;
+
 import com.primo.worldgen_backend.entities.World;
-import com.primo.worldgen_backend.mapper.WorldMapper;
+import com.primo.worldgen_backend.repository.WorldRepository;
 import com.primo.worldgen_backend.service.WorldService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.time.Instant;
+
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class WorldServiceImpl implements WorldService {
-    private final WorldDAO worldDAO;
 
-    @Override
-    public WorldResponseDTO create(WorldRequestDTO dto){
-        World w = WorldMapper.toEntity(dto);
-        w.setCreatedAt(Instant.now());
-        return WorldMapper.toDTO(worldDAO.save(w));
+    private final WorldRepository worldRepository;
+
+    public WorldServiceImpl(WorldRepository worldRepository) {
+        this.worldRepository = worldRepository;
     }
 
     @Override
-    public List<WorldResponseDTO> getAll(){
-        return worldDAO.findAll().stream().map(WorldMapper::toDTO).collect(Collectors.toList());
+    public World create(World world) {
+        return worldRepository.save(world);
     }
 
     @Override
-    public WorldResponseDTO getById(Long id){
-        World w = worldDAO.findById(id);
-        return w!=null?WorldMapper.toDTO(w):null;
+    public World update(Long id, World world) {
+        World existing = findById(id);
+        world.setId(existing.getId());
+        return worldRepository.save(world);
+    }
+
+    @Override
+    public World findById(Long id) {
+        return worldRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("World not found with id " + id));
+    }
+
+    @Override
+    public List<World> findAll() {
+        return worldRepository.findAll();
+    }
+
+    @Override
+    public void delete(Long id) {
+        World existing = findById(id);
+        worldRepository.delete(existing);
     }
 }

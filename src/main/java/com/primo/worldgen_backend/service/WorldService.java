@@ -1,11 +1,15 @@
 package com.primo.worldgen_backend.service;
 
-import com.primo.worldgen_backend.dto.world.WorldRequestDTO;
-import com.primo.worldgen_backend.dto.world.WorldResponseDTO;
+
+import com.primo.worldgen_backend.entities.World;
+
 import java.util.List;
 
 public interface WorldService {
-    WorldResponseDTO create(WorldRequestDTO dto);
-    List<WorldResponseDTO> getAll();
-    WorldResponseDTO getById(Long id);
+    World create(World world);
+    World update(Long id, World world);
+    World findById(Long id);
+    List<World> findAll();
+    void delete(Long id);
 }
+

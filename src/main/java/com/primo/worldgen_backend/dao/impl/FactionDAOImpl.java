@@ -27,4 +27,9 @@ public class FactionDAOImpl implements FactionDAO {
     public Faction findById(Long id) {
         return factionRepository.findById(id).orElse(null);
     }
+
+    @Override
+    public void delete(Faction faction) {
+        factionRepository.delete(faction);
+    }
 }

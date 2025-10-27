@@ -64,7 +64,7 @@ public class RegionServiceImpl implements RegionService {
     @Override
     public void delete(Long id) {
         Region existing = findById(id);
-        regionDAO.delete(existing); 
+        regionDAO.delete(existing);
     }
 }
 

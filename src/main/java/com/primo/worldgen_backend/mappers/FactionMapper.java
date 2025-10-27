@@ -1,27 +1,27 @@
 package com.primo.worldgen_backend.mappers;
 
-
 import com.primo.worldgen_backend.dto.faction.FactionRequestDTO;
 import com.primo.worldgen_backend.dto.faction.FactionResponseDTO;
 import com.primo.worldgen_backend.entities.Faction;
-import com.primo.worldgen_backend.entities.Region;
 
 public class FactionMapper {
 
-    public static Faction toEntity(FactionRequestDTO dto, Region region){
+    public static Faction toEntity(FactionRequestDTO dto) {
         return Faction.builder()
                 .name(dto.getName())
-                .power(dto.getPower())
-                .region(region)
+                .aggression(dto.getAggression())
+                .expansionism(dto.getExpansionism())
+                .size(dto.getSize())
                 .build();
     }
 
-    public static FactionResponseDTO toDTO(Faction faction){
+    public static FactionResponseDTO toDTO(Faction faction) {
         return FactionResponseDTO.builder()
                 .id(faction.getId())
                 .name(faction.getName())
-                .power(faction.getPower())
-                .regionId(faction.getRegion()!=null ? faction.getRegion().getId() : null)
+                .aggression(faction.getAggression())
+                .expansionism(faction.getExpansionism())
+                .size(faction.getSize())
                 .build();
     }
 }

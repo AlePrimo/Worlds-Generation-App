@@ -1,17 +1,27 @@
 package com.primo.worldgen_backend.dto.faction;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class FactionRequestDTO {
-    @NotBlank
+
+    @NotBlank(message = "El nombre es obligatorio")
     private String name;
 
-    @NotNull
-    private Long regionId;
+    @DecimalMin(value = "0.0", message = "La agresión no puede ser menor que 0.0")
+    @DecimalMax(value = "1.0", message = "La agresión no puede superar 1.0")
+    private double aggression;
 
-    private int power;
+    @DecimalMin(value = "0.0", message = "El expansionismo no puede ser menor que 0.0")
+    @DecimalMax(value = "1.0", message = "El expansionismo no puede superar 1.0")
+    private double expansionism;
+
+    @Min(value = 0, message = "El tamaño no puede ser negativo")
+    private int size;
 }
 

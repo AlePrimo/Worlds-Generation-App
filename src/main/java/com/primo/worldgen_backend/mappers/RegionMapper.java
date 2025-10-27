@@ -5,12 +5,14 @@ import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
 import com.primo.worldgen_backend.entities.Event;
 import com.primo.worldgen_backend.entities.Faction;
 import com.primo.worldgen_backend.entities.Region;
+import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
+@Component
 public class RegionMapper {
 
-    public static Region toEntity(RegionRequestDTO dto){
+    public Region toEntity(RegionRequestDTO dto) {
         return Region.builder()
                 .name(dto.getName())
                 .lat(dto.getLat())
@@ -23,7 +25,7 @@ public class RegionMapper {
                 .build();
     }
 
-    public static RegionResponseDTO toDTO(Region entity){
+    public RegionResponseDTO toDTO(Region entity) {
         return RegionResponseDTO.builder()
                 .id(entity.getId())
                 .name(entity.getName())

@@ -1,7 +1,8 @@
 package com.primo.worldgen_backend.mappers;
 
-import com.primo.worldgen_backend.dto.EventRequestDTO;
-import com.primo.worldgen_backend.dto.EventResponseDTO;
+
+import com.primo.worldgen_backend.dto.events.EventRequestDTO;
+import com.primo.worldgen_backend.dto.events.EventResponseDTO;
 import com.primo.worldgen_backend.entities.Event;
 import com.primo.worldgen_backend.entities.Faction;
 

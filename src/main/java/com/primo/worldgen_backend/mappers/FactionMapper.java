@@ -1,7 +1,8 @@
 package com.primo.worldgen_backend.mappers;
 
-import com.primo.worldgen_backend.dto.FactionRequestDTO;
-import com.primo.worldgen_backend.dto.FactionResponseDTO;
+
+import com.primo.worldgen_backend.dto.faction.FactionRequestDTO;
+import com.primo.worldgen_backend.dto.faction.FactionResponseDTO;
 import com.primo.worldgen_backend.entities.Faction;
 import com.primo.worldgen_backend.entities.Region;
 

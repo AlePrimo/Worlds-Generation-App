@@ -1,59 +1,58 @@
 package com.primo.worldgen_backend.service.impl;
 
-
+import com.primo.worldgen_backend.dao.EventDAO;
 import com.primo.worldgen_backend.entities.Event;
-import com.primo.worldgen_backend.repository.EventRepository;
-import com.primo.worldgen_backend.repository.RegionRepository;
 import com.primo.worldgen_backend.service.EventService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
 
-    private final EventRepository eventRepository;
-    private final RegionRepository regionRepository;
-
-    public EventServiceImpl(EventRepository eventRepository, RegionRepository regionRepository) {
-        this.eventRepository = eventRepository;
-        this.regionRepository = regionRepository;
-    }
+    private final EventDAO eventDAO;
 
     @Override
     public Event create(Event event) {
-        validateRegion(event.getRegion().getId());
-        return eventRepository.save(event);
+        if (event.getStartedAt() == null) {
+            event.setStartedAt(Instant.now());
+        }
+        event.setActive(true);
+        return eventDAO.save(event);
     }
 
     @Override
     public Event update(Long id, Event event) {
         Event existing = findById(id);
-        validateRegion(event.getRegion().getId());
-        event.setId(existing.getId());
-        return eventRepository.save(event);
+        existing.setType(event.getType());
+        existing.setStartedAt(event.getStartedAt());
+        existing.setDescription(event.getDescription());
+        existing.setSeverity(event.getSeverity());
+        existing.setActive(event.isActive());
+        return eventDAO.save(existing);
     }
 
     @Override
     public Event findById(Long id) {
-        return eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id " + id));
+        Event event = eventDAO.findById(id);
+        if (event == null) {
+            throw new RuntimeException("Event not found with id " + id);
+        }
+        return event;
     }
 
     @Override
     public List<Event> findAll() {
-        return eventRepository.findAll();
+        return eventDAO.findAll();
     }
 
     @Override
     public void delete(Long id) {
         Event existing = findById(id);
-        eventRepository.delete(existing);
-    }
-
-    private void validateRegion(Long regionId) {
-        regionRepository.findById(regionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Region not found with id " + regionId));
+        eventDAO.delete(existing);
     }
 }
 

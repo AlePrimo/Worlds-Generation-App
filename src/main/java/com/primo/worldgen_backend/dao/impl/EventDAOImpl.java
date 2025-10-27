@@ -27,4 +27,9 @@ public class EventDAOImpl implements EventDAO {
     public Event findById(Long id) {
         return eventRepository.findById(id).orElse(null);
     }
+
+    @Override
+    public void delete(Event event) {
+        eventRepository.delete(event);
+    }
 }

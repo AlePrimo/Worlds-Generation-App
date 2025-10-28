@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "regions")
 @Schema(description = "Representa una región dentro de un mundo")
 public class Region {
 

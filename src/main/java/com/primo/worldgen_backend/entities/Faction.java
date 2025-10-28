@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @AllArgsConstructor
 @Builder
 @Schema(description = "Representa una facción dentro de una región")
-
+@Table(name = "factions")
 public class Faction {
 
     @Id

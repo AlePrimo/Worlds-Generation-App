@@ -16,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "worlds")
 @Schema(description = "Representa un mundo generado aleatoriamente")
 
 public class World {
@@ -31,6 +32,7 @@ public class World {
 
     @NotNull
     @Schema(description = "Fecha de creación del mundo")
+    @Column(name = "created_at")
     private Instant createdAt;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)

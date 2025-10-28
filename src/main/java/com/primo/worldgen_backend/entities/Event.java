@@ -14,6 +14,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "events")
 @Schema(description = "Representa un evento que afecta a una región")
 
 public class Event {

@@ -69,10 +69,14 @@ public class RegionControllerTest {
 
     @Test
     void getById_notFound_returns500() throws Exception {
-        Mockito.when(regionService.findById(99L)).thenThrow(new RuntimeException("Region not found with id 99"));
+        // Simulamos que el servicio lanza RuntimeException al no encontrar la región
+        Mockito.when(regionService.findById(99L))
+                .thenThrow(new RuntimeException("Region not found with id 99"));
+
         mockMvc.perform(get("/api/regions/99"))
                 .andExpect(status().isInternalServerError());
     }
+
 
     @Test
     void list_returnsOk() throws Exception {

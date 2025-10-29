@@ -72,10 +72,13 @@ public class WorldControllerTest {
 
     @Test
     void getById_notFound_returns500() throws Exception {
-        Mockito.when(worldService.findById(99L)).thenThrow(new RuntimeException("World not found with id 99"));
+        Mockito.when(worldService.findById(99L))
+                .thenThrow(new RuntimeException("World not found with id 99"));
+
         mockMvc.perform(get("/api/worlds/99"))
                 .andExpect(status().isInternalServerError());
     }
+
 
     @Test
     void list_returnsOk() throws Exception {

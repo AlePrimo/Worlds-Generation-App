@@ -21,7 +21,7 @@ class EventMapperTest {
                 .active(true)
                 .build();
 
-        Event e = EventMapper.toEntity(dto);
+        Event e = eventMapper.toEntity(dto);
 
         assertEquals("SEQUIA", e.getType());
         assertEquals(now, e.getStartedAt());

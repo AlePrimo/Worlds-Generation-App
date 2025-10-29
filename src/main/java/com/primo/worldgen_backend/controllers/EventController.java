@@ -33,9 +33,9 @@ public class EventController {
     @PostMapping
     @Operation(summary = "Crear un evento")
     public ResponseEntity<EventResponseDTO> create(@Valid @RequestBody EventRequestDTO dto) {
-        Event event = EventMapper.toEntity(dto);
+        Event event = eventMapper.toEntity(dto);
         Event saved = eventService.create(event);
-        return new ResponseEntity<>(EventMapper.toDTO(saved), HttpStatus.CREATED);
+        return new ResponseEntity<>(eventMapper.toDTO(saved), HttpStatus.CREATED);
     }
 
 
@@ -43,7 +43,7 @@ public class EventController {
     @Operation(summary = "Obtener evento por id")
     public ResponseEntity<EventResponseDTO> getById(@PathVariable Long id) {
         Event event = eventService.findById(id);
-        return ResponseEntity.ok(EventMapper.toDTO(event));
+        return ResponseEntity.ok(eventMapper.toDTO(event));
     }
 
 
@@ -52,7 +52,7 @@ public class EventController {
     public ResponseEntity<List<EventResponseDTO>> list() {
         List<EventResponseDTO> list = eventService.findAll()
                 .stream()
-                .map(EventMapper::toDTO)
+                .map(eventMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
@@ -61,9 +61,9 @@ public class EventController {
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar evento")
     public ResponseEntity<EventResponseDTO> update(@PathVariable Long id, @Valid @RequestBody EventRequestDTO dto) {
-        Event event = EventMapper.toEntity(dto);
+        Event event = eventMapper.toEntity(dto);
         Event updated = eventService.update(id, event);
-        return ResponseEntity.ok(EventMapper.toDTO(updated));
+        return ResponseEntity.ok(eventMapper.toDTO(updated));
     }
 
 

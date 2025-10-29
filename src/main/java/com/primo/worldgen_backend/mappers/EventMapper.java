@@ -11,7 +11,7 @@ public class EventMapper {
 
 
 
-    public static Event toEntity(EventRequestDTO dto) {
+    public  Event toEntity(EventRequestDTO dto) {
         return Event.builder()
                 .type(dto.getType())
                 .startedAt(dto.getStartedAt())
@@ -21,7 +21,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static EventResponseDTO toDTO(Event event) {
+    public  EventResponseDTO toDTO(Event event) {
         return EventResponseDTO.builder()
                 .id(event.getId())
                 .type(event.getType())

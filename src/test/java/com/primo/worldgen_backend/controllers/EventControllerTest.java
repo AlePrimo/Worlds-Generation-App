@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,16 +24,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(EventController.class)
+@Import(EventMapper.class) // Usamos mapper real para convertir entidades a DTO
 class EventControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private EventService eventService;
-
-    @MockitoBean
-    private EventMapper eventMapper;
+    private EventService eventService; // solo mockeamos el servicio
 
     private Event event;
     private EventRequestDTO requestDTO;
@@ -72,9 +70,7 @@ class EventControllerTest {
 
     @Test
     void create_returnsCreated() throws Exception {
-        when(eventMapper.toEntity(any(EventRequestDTO.class))).thenReturn(event);
         when(eventService.create(any(Event.class))).thenReturn(event);
-        when(eventMapper.toDTO(any(Event.class))).thenReturn(responseDTO);
 
         String json = """
                 {
@@ -90,7 +86,7 @@ class EventControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.type").value("SEQUIA"))
                 .andExpect(jsonPath("$.severity").value(7));
     }
@@ -98,48 +94,57 @@ class EventControllerTest {
     @Test
     void getById_returnsOk() throws Exception {
         when(eventService.findById(1L)).thenReturn(event);
-        when(eventMapper.toDTO(event)).thenReturn(responseDTO);
 
         mockMvc.perform(get("/api/events/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.type").value("SEQUIA"));
     }
 
     @Test
     void list_returnsOk() throws Exception {
         when(eventService.findAll()).thenReturn(List.of(event));
-        when(eventMapper.toDTO(event)).thenReturn(responseDTO);
 
         mockMvc.perform(get("/api/events"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].id").value(1L))
                 .andExpect(jsonPath("$[0].type").value("SEQUIA"));
     }
 
     @Test
     void update_returnsOk() throws Exception {
-        when(eventMapper.toEntity(any(EventRequestDTO.class))).thenReturn(event);
-        when(eventService.update(Mockito.eq(1L), any(Event.class))).thenReturn(event);
-        when(eventMapper.toDTO(any(Event.class))).thenReturn(responseDTO);
+        // Creamos una nueva entidad que simule la actualización
+        Event updatedEvent = Event.builder()
+                .id(1L)
+                .type("SEQUIA")
+                .startedAt(requestDTO.getStartedAt())
+                .description("Sequía actualizada") // <--- reflejamos el cambio
+                .severity(8)
+                .active(true)
+                .build();
+
+        when(eventService.update(Mockito.eq(1L), any(Event.class))).thenReturn(updatedEvent);
 
         String json = """
-                {
-                    "type": "SEQUIA",
-                    "startedAt": "%s",
-                    "description": "Sequía actualizada",
-                    "severity": 8,
-                    "active": true
-                }
-                """.formatted(requestDTO.getStartedAt().toString());
+            {
+                "type": "SEQUIA",
+                "startedAt": "%s",
+                "description": "Sequía actualizada",
+                "severity": 8,
+                "active": true
+            }
+            """.formatted(requestDTO.getStartedAt().toString());
 
         mockMvc.perform(put("/api/events/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.type").value("SEQUIA"));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.type").value("SEQUIA"))
+                .andExpect(jsonPath("$.description").value("Sequía actualizada"))
+                .andExpect(jsonPath("$.severity").value(8));
     }
+
 
     @Test
     void delete_returnsNoContent() throws Exception {

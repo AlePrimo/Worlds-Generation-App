@@ -3,12 +3,16 @@ package com.primo.worldgen_backend.mappers;
 import com.primo.worldgen_backend.dto.events.EventRequestDTO;
 import com.primo.worldgen_backend.entities.Event;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class EventMapperTest {
+
+
+private final EventMapper eventMapper = new EventMapper();
 
     @Test
     void toEntity_ok() {
@@ -39,7 +43,7 @@ class EventMapperTest {
                 .active(false)
                 .build();
 
-        var dto = EventMapper.toDTO(entity);
+        var dto = eventMapper.toDTO(entity);
         assertEquals(1L, dto.getId());
         assertEquals("VULCANISMO", dto.getType());
     }

@@ -27,31 +27,81 @@ public class WorldServiceImplTest {
     }
 
     @Test
-    void update_existing_updatesFields() {
-        World existing = World.builder().id(1L).name("Old").createdAt(Instant.now()).ticks(1).build();
-        World update = World.builder().name("New").ticks(10).build();
-        when(worldDAO.findById(1L)).thenReturn(existing);
-        when(worldDAO.save(any(World.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    void create_withNullCreatedAt_setsNowAndTicksZero() {
+        World world = World.builder().id(1L).name("W").createdAt(null).ticks(99).build();
+        when(worldDAO.save(any(World.class))).thenAnswer(i -> i.getArgument(0));
 
-        World res = worldService.update(1L, update);
-        assertEquals("New", res.getName());
-        assertEquals(10, res.getTicks());
+        World result = worldService.create(world);
+
+        assertEquals(0, result.getTicks());
+        assertNotNull(result.getCreatedAt());
+        verify(worldDAO).save(world);
     }
 
     @Test
-    void delete_existing_deletes() {
-        World existing = World.builder().id(2L).name("X").build();
-        when(worldDAO.findById(2L)).thenReturn(existing);
+    void create_withCreatedAt_keepsValue() {
+        Instant now = Instant.now();
+        World world = World.builder().createdAt(now).build();
+        when(worldDAO.save(any(World.class))).thenAnswer(i -> i.getArgument(0));
+
+        World result = worldService.create(world);
+
+        assertEquals(now, result.getCreatedAt());
+        assertEquals(0, result.getTicks());
+    }
+
+    @Test
+    void update_existing_updatesAllFields() {
+        World existing = World.builder().id(1L).name("Old").ticks(1).build();
+        World update = World.builder().name("New").regions(List.of()).ticks(10).build();
+
+        when(worldDAO.findById(1L)).thenReturn(existing);
+        when(worldDAO.save(any(World.class))).thenAnswer(i -> i.getArgument(0));
+
+        World result = worldService.update(1L, update);
+
+        assertEquals("New", result.getName());
+        assertEquals(10, result.getTicks());
+        verify(worldDAO).save(existing);
+    }
+
+    @Test
+    void findById_found_returnsWorld() {
+        World world = World.builder().id(1L).name("W").build();
+        when(worldDAO.findById(1L)).thenReturn(world);
+
+        World result = worldService.findById(1L);
+
+        assertEquals("W", result.getName());
+        verify(worldDAO).findById(1L);
+    }
+
+    @Test
+    void findById_notFound_throwsException() {
+        when(worldDAO.findById(1L)).thenReturn(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> worldService.findById(1L));
+        assertTrue(ex.getMessage().contains("World not found"));
+    }
+
+    @Test
+    void findAll_returnsList() {
+        when(worldDAO.findAll()).thenReturn(List.of(new World(), new World()));
+
+        List<World> list = worldService.findAll();
+
+        assertEquals(2, list.size());
+        verify(worldDAO).findAll();
+    }
+
+    @Test
+    void delete_existing_callsDelete() {
+        World existing = World.builder().id(1L).build();
+        when(worldDAO.findById(1L)).thenReturn(existing);
         doNothing().when(worldDAO).delete(existing);
 
-        worldService.delete(2L);
-        verify(worldDAO, times(1)).delete(existing);
-    }
+        worldService.delete(1L);
 
-    @Test
-    void findById_notFound_throws() {
-        when(worldDAO.findById(99L)).thenReturn(null);
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> worldService.findById(99L));
-        assertTrue(ex.getMessage().contains("World not found"));
+        verify(worldDAO).delete(existing);
     }
 }

@@ -26,32 +26,94 @@ public class RegionServiceImplTest {
     }
 
     @Test
-    void update_existing_updatesFields() {
+    void create_withNullLists_setsDefaultsAndSaves() {
+        Region region = Region.builder().id(1L).name("Region").factions(null).events(null).build();
+        when(regionDAO.save(any(Region.class))).thenAnswer(i -> i.getArgument(0));
+
+        Region result = regionService.create(region);
+
+        assertTrue(result.isAlive());
+        assertNotNull(result.getFactions());
+        assertNotNull(result.getEvents());
+        verify(regionDAO, times(1)).save(region);
+    }
+
+    @Test
+    void create_withExistingLists_savesAsIs() {
+        Region region = Region.builder().factions(List.of()).events(List.of()).build();
+        when(regionDAO.save(any(Region.class))).thenAnswer(i -> i.getArgument(0));
+
+        Region result = regionService.create(region);
+
+        assertTrue(result.isAlive());
+        assertEquals(List.of(), result.getFactions());
+        verify(regionDAO).save(region);
+    }
+
+    @Test
+    void update_existing_updatesAllFields() {
         Region existing = Region.builder().id(1L).name("Old").build();
-        Region update = Region.builder().name("New").lat(1.1).lon(2.2).population(5).build();
+        Region update = Region.builder()
+                .name("New")
+                .lat(1.1)
+                .lon(2.2)
+                .population(100)
+                .water(50)
+                .food(60)
+                .minerals(70)
+                .factions(List.of())
+                .events(List.of())
+                .alive(false)
+                .build();
 
         when(regionDAO.findById(1L)).thenReturn(existing);
         when(regionDAO.save(any(Region.class))).thenAnswer(i -> i.getArgument(0));
 
-        Region res = regionService.update(1L, update);
-        assertEquals("New", res.getName());
-        assertEquals(1.1, res.getLat());
+        Region result = regionService.update(1L, update);
+
+        assertEquals("New", result.getName());
+        assertEquals(1.1, result.getLat());
+        assertFalse(result.isAlive());
+        verify(regionDAO).save(existing);
     }
 
     @Test
-    void delete_existing_deletes() {
-        Region existing = Region.builder().id(2L).name("R").build();
-        when(regionDAO.findById(2L)).thenReturn(existing);
+    void findById_found_returnsRegion() {
+        Region region = Region.builder().id(1L).name("R").build();
+        when(regionDAO.findById(1L)).thenReturn(region);
+
+        Region result = regionService.findById(1L);
+
+        assertEquals("R", result.getName());
+        verify(regionDAO).findById(1L);
+    }
+
+    @Test
+    void findById_notFound_throwsException() {
+        when(regionDAO.findById(1L)).thenReturn(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> regionService.findById(1L));
+        assertTrue(ex.getMessage().contains("Region not found"));
+    }
+
+    @Test
+    void findAll_returnsList() {
+        when(regionDAO.findAll()).thenReturn(List.of(new Region(), new Region()));
+
+        List<Region> list = regionService.findAll();
+
+        assertEquals(2, list.size());
+        verify(regionDAO).findAll();
+    }
+
+    @Test
+    void delete_existing_callsDelete() {
+        Region existing = Region.builder().id(1L).build();
+        when(regionDAO.findById(1L)).thenReturn(existing);
         doNothing().when(regionDAO).delete(existing);
 
-        regionService.delete(2L);
-        verify(regionDAO, times(1)).delete(existing);
-    }
+        regionService.delete(1L);
 
-    @Test
-    void findById_notFound_throws() {
-        when(regionDAO.findById(99L)).thenReturn(null);
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> regionService.findById(99L));
-        assertTrue(ex.getMessage().contains("Region not found"));
+        verify(regionDAO).delete(existing);
     }
 }

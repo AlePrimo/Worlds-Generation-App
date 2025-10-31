@@ -1,6 +1,5 @@
-package com.primo.worldgen_backend.dto.worlds;
+package com.primo.worldgen_backend.dto.world;
 
-import com.primo.worldgen_backend.dto.world.WorldRequestDTO;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

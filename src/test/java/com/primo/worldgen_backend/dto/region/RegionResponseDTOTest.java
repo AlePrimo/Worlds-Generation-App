@@ -1,6 +1,5 @@
-package com.primo.worldgen_backend.dto.regions;
+package com.primo.worldgen_backend.dto.region;
 
-import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
 import org.junit.jupiter.api.Test;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;

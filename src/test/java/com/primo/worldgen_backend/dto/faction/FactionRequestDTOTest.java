@@ -1,6 +1,5 @@
-package com.primo.worldgen_backend.dto.factions;
+package com.primo.worldgen_backend.dto.faction;
 
-import com.primo.worldgen_backend.dto.faction.FactionRequestDTO;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.primo.worldgen_backend.dto.region.RegionRequestDTO;
 import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
 import com.primo.worldgen_backend.entities.Region;
+import com.primo.worldgen_backend.entities.World;
 import com.primo.worldgen_backend.mappers.RegionMapper;
 import com.primo.worldgen_backend.service.RegionService;
+import com.primo.worldgen_backend.service.WorldService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,16 +36,33 @@ public class RegionControllerTest {
     @MockitoBean
     private RegionMapper regionMapper;
 
+    @MockitoBean
+    private WorldService worldService;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     @Test
     void createRegion_returnsCreated() throws Exception {
-        RegionRequestDTO req = RegionRequestDTO.builder().name("R1").lat(-10).lon(20).population(100).water(50).food(40).minerals(10).alive(true).build();
+        RegionRequestDTO req = RegionRequestDTO.builder()
+                .name("R1")
+                .lat(-10)
+                .lon(20)
+                .population(100)
+                .water(50)
+                .food(40)
+                .minerals(10)
+                .alive(true)
+                .worldName("Earth")
+                .build();
+
         Region entity = Region.builder().id(1L).name("R1").build();
         RegionResponseDTO resp = RegionResponseDTO.builder().id(1L).name("R1").build();
 
+        World world = World.builder().id(10L).name("Earth").build();
+
         Mockito.when(regionMapper.toEntity(any(RegionRequestDTO.class))).thenReturn(entity);
+        Mockito.when(worldService.findByName("Earth")).thenReturn(world);
         Mockito.when(regionService.create(any(Region.class))).thenReturn(entity);
         Mockito.when(regionMapper.toDTO(any(Region.class))).thenReturn(resp);
 
@@ -69,14 +88,12 @@ public class RegionControllerTest {
 
     @Test
     void getById_notFound_returns500() throws Exception {
-        // Simulamos que el servicio lanza RuntimeException al no encontrar la región
         Mockito.when(regionService.findById(99L))
                 .thenThrow(new RuntimeException("Region not found with id 99"));
 
         mockMvc.perform(get("/api/regions/99"))
                 .andExpect(status().isInternalServerError());
     }
-
 
     @Test
     void list_returnsOk() throws Exception {
@@ -93,7 +110,18 @@ public class RegionControllerTest {
 
     @Test
     void update_returnsOk() throws Exception {
-        RegionRequestDTO req = RegionRequestDTO.builder().name("Rupdated").lat(1).lon(2).population(10).water(2).food(3).minerals(4).alive(false).build();
+        RegionRequestDTO req = RegionRequestDTO.builder()
+                .name("Rupdated")
+                .lat(1)
+                .lon(2)
+                .population(10)
+                .water(2)
+                .food(3)
+                .minerals(4)
+                .alive(false)
+                .worldName("Earth")
+                .build();
+
         Region in = Region.builder().name("Rupdated").build();
         Region out = Region.builder().id(4L).name("Rupdated").build();
         RegionResponseDTO resp = RegionResponseDTO.builder().id(4L).name("Rupdated").build();

@@ -4,8 +4,10 @@ package com.primo.worldgen_backend.controllers;
 import com.primo.worldgen_backend.dto.region.RegionRequestDTO;
 import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
 import com.primo.worldgen_backend.entities.Region;
+import com.primo.worldgen_backend.entities.World;
 import com.primo.worldgen_backend.mappers.RegionMapper;
 import com.primo.worldgen_backend.service.RegionService;
+import com.primo.worldgen_backend.service.WorldService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -30,16 +32,19 @@ public class RegionController {
 
     private final RegionService regionService;
     private final RegionMapper regionMapper;
+    private final WorldService worldService;
 
 
     @PostMapping
     @Operation(summary = "Crear una región")
     public ResponseEntity<RegionResponseDTO> create(@Valid @RequestBody RegionRequestDTO dto) {
         Region region = regionMapper.toEntity(dto);
+       
+        World world = worldService.findByName(dto.getWorldName());
+        region.setWorld(world);
         Region saved = regionService.create(region);
         return new ResponseEntity<>(regionMapper.toDTO(saved), HttpStatus.CREATED);
     }
-
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener región por id")

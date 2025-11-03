@@ -18,12 +18,17 @@ public class WorldServiceImpl implements WorldService {
     @Override
     public World create(World world) {
 
+
+        World existing = worldDAO.findByName(world.getName());
+        if (existing != null) {
+            throw new RuntimeException("World already exists with name " + world.getName());
+        }
+
         if (world.getCreatedAt() == null) {
             world.setCreatedAt(Instant.now());
         }
 
         world.setTicks(0);
-
 
         return worldDAO.save(world);
     }
@@ -32,11 +37,9 @@ public class WorldServiceImpl implements WorldService {
     public World update(Long id, World world) {
         World existing = findById(id);
 
-
         existing.setName(world.getName());
         existing.setRegions(world.getRegions());
         existing.setTicks(world.getTicks());
-
 
         return worldDAO.save(existing);
     }
@@ -58,7 +61,15 @@ public class WorldServiceImpl implements WorldService {
     @Override
     public void delete(Long id) {
         World existing = findById(id);
-      worldDAO.delete(existing);
+        worldDAO.delete(existing);
+    }
 
+    @Override
+    public World findByName(String name) {
+        World w = worldDAO.findByName(name);
+        if (w == null) {
+            throw new RuntimeException("World not found with name " + name);
+        }
+        return w;
     }
 }

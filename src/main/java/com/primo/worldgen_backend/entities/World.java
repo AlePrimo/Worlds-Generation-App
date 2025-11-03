@@ -27,6 +27,7 @@ public class World {
     private Long id;
 
     @NotBlank
+    @Column(unique = true)
     @Schema(description = "Nombre del mundo", example = "Zyrion")
     private String name;
 

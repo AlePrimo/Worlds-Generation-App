@@ -8,4 +8,5 @@ public interface WorldDAO {
     List<World> findAll();
     World findById(Long id);
     void delete(World world);
+    World findByName(String name);
 }

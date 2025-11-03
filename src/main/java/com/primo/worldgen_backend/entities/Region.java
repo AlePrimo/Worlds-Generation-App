@@ -61,7 +61,7 @@ public class Region {
     @JoinColumn(name = "region_id")
     @Schema(description = "Eventos activos en la región")
     private List<Event> events;
-    
+
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "world_id", nullable = false)
     @Schema(description = "Mundo al que pertenece la región")

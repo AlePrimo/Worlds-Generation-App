@@ -42,4 +42,8 @@ public class RegionRequestDTO {
 
     @Schema(description = "Indica si la región está activa", example = "true")
     private boolean alive;
+
+    @NotBlank(message = "El nombre del world es obligatorio para crear una región")
+    @Schema(description = "Nombre del world al que pertenece la región", example = "Zyrion")
+    private String worldName;
 }

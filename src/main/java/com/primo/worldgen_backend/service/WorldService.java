@@ -11,5 +11,6 @@ public interface WorldService {
     World findById(Long id);
     List<World> findAll();
     void delete(Long id);
+    World findByName(String name);
 }
 

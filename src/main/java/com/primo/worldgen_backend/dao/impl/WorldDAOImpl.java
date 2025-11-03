@@ -33,4 +33,9 @@ public class WorldDAOImpl implements WorldDAO {
     public void delete(World world) {
         worldRepository.delete(world);
     }
+
+    @Override
+    public World findByName(String name) {
+        return worldRepository.findByName(name).orElse(null);
+    }
 }

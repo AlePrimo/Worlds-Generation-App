@@ -13,4 +13,3 @@ INSERT INTO factions (name, aggression, expansionism, size, region_id) VALUES
 INSERT INTO events (type, started_at, description, severity, active, region_id) VALUES
 ('SEQUIA', NOW(), 'Sequía severa que reduce la población', 7, TRUE, 2),
 ('INUNDACION', NOW(), 'Inundación que afecta cultivos', 5, TRUE, 1);
-

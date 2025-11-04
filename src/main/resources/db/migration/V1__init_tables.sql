@@ -1,12 +1,12 @@
 CREATE TABLE worlds (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL,
     ticks BIGINT DEFAULT 0
 );
 
 CREATE TABLE regions (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     lat DOUBLE PRECISION,
     lon DOUBLE PRECISION,
@@ -21,7 +21,7 @@ CREATE TABLE regions (
 );
 
 CREATE TABLE factions (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     aggression DOUBLE PRECISION CHECK (aggression BETWEEN 0 AND 1),
     expansionism DOUBLE PRECISION CHECK (expansionism BETWEEN 0 AND 1),
@@ -32,7 +32,7 @@ CREATE TABLE factions (
 );
 
 CREATE TABLE events (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     type VARCHAR(255) NOT NULL,
     started_at TIMESTAMP NOT NULL,
     description TEXT NOT NULL,

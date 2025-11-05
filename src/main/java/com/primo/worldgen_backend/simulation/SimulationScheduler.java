@@ -21,7 +21,7 @@ public class SimulationScheduler {
     public void tickAllWorlds() {
         var worlds = worldService.findAll();
         for (World w : worlds) {
-          
+
             w.setTicks(w.getTicks() + 1);
             worldService.update(w.getId(), w); // this will persist and publish via service
         }

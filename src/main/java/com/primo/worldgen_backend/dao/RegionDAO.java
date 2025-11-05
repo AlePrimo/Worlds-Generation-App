@@ -8,4 +8,5 @@ public interface RegionDAO {
     List<Region> findAll();
     Region findById(Long id);
     void delete(Region region);
+    Region findByName(String name);
 }

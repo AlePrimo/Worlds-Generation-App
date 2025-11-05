@@ -32,4 +32,9 @@ public class RegionDAOImpl implements RegionDAO {
     public void delete(Region region) {
         regionRepository.delete(region);
     }
+
+    @Override
+    public Region findByName(String name) {
+        return regionRepository.findByName(name);
+    }
 }

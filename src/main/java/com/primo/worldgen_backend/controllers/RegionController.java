@@ -113,7 +113,7 @@ public class RegionController {
 
         regionService.delete(id);
 
-        
+
         publisher.publishRegionUpdate(existing.getId(), dto);
 
         List<RegionResponseDTO> all = regionService.findAll()

@@ -6,6 +6,7 @@ import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
 import com.primo.worldgen_backend.entities.Region;
 import com.primo.worldgen_backend.entities.World;
 import com.primo.worldgen_backend.mappers.RegionMapper;
+import com.primo.worldgen_backend.messaging.RegionEventPublisher;
 import com.primo.worldgen_backend.service.RegionService;
 import com.primo.worldgen_backend.service.WorldService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,11 +30,10 @@ import java.util.stream.Collectors;
 @Tag(name = "Regions", description = "APIs para manejar regiones")
 public class RegionController {
 
-
     private final RegionService regionService;
     private final RegionMapper regionMapper;
     private final WorldService worldService;
-
+    private final RegionEventPublisher publisher;
 
     @PostMapping
     @Operation(summary = "Crear una región")
@@ -43,7 +43,18 @@ public class RegionController {
         World world = worldService.findByName(dto.getWorldName());
         region.setWorld(world);
         Region saved = regionService.create(region);
-        return new ResponseEntity<>(regionMapper.toDTO(saved), HttpStatus.CREATED);
+        RegionResponseDTO out = regionMapper.toDTO(saved);
+
+
+        publisher.publishRegionUpdate(saved.getId(), out);
+
+        List<RegionResponseDTO> all = regionService.findAll()
+                .stream()
+                .map(regionMapper::toDTO)
+                .collect(Collectors.toList());
+        publisher.publishRegionListUpdate(all);
+
+        return new ResponseEntity<>(out, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
@@ -52,7 +63,6 @@ public class RegionController {
         Region region = regionService.findById(id);
         return ResponseEntity.ok(regionMapper.toDTO(region));
     }
-
 
     @GetMapping
     @Operation(summary = "Listar regiones")
@@ -64,20 +74,54 @@ public class RegionController {
         return ResponseEntity.ok(list);
     }
 
-
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar región")
     public ResponseEntity<RegionResponseDTO> update(@PathVariable Long id, @Valid @RequestBody RegionRequestDTO dto) {
         Region region = regionMapper.toEntity(dto);
         Region updated = regionService.update(id, region);
-        return ResponseEntity.ok(regionMapper.toDTO(updated));
-    }
+        RegionResponseDTO out = regionMapper.toDTO(updated);
 
+
+        publisher.publishRegionUpdate(updated.getId(), out);
+
+        List<RegionResponseDTO> all = regionService.findAll()
+                .stream()
+                .map(regionMapper::toDTO)
+                .collect(Collectors.toList());
+        publisher.publishRegionListUpdate(all);
+
+        return ResponseEntity.ok(out);
+    }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar región")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
+
+        Region existing = regionService.findById(id);
+
+        RegionResponseDTO dto = RegionResponseDTO.builder()
+                .id(existing.getId())
+                .name("__DELETED__")
+                .lat(existing.getLat())
+                .lon(existing.getLon())
+                .population(existing.getPopulation())
+                .water(existing.getWater())
+                .food(existing.getFood())
+                .minerals(existing.getMinerals())
+                .alive(existing.isAlive())
+                .build();
+
         regionService.delete(id);
+
+        
+        publisher.publishRegionUpdate(existing.getId(), dto);
+
+        List<RegionResponseDTO> all = regionService.findAll()
+                .stream()
+                .map(regionMapper::toDTO)
+                .collect(Collectors.toList());
+        publisher.publishRegionListUpdate(all);
+
         return ResponseEntity.noContent().build();
     }
 }

@@ -89,7 +89,7 @@ public class RegionServiceImpl implements RegionService {
                 .food(existing.getFood())
                 .minerals(existing.getMinerals())
                 .alive(existing.isAlive())
-                
+
                 .build();
 
         publisher.publishRegionUpdate(existing.getId(), dto);

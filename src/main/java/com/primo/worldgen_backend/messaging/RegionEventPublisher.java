@@ -10,12 +10,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RegionEventPublisher {
 
-    private final SimpMessagingTemplate template;
-
-
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     public void publishRegionUpdate(Long regionId, RegionResponseDTO dto) {
-
-        template.convertAndSend("/topic/regions", dto);
+        String destination = "/topic/region." + regionId;
+        simpMessagingTemplate.convertAndSend(destination, dto);
     }
 }

@@ -1,7 +1,10 @@
 package com.primo.worldgen_backend.service.impl;
 
 import com.primo.worldgen_backend.dao.RegionDAO;
+import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
 import com.primo.worldgen_backend.entities.Region;
+import com.primo.worldgen_backend.mappers.RegionMapper;
+import com.primo.worldgen_backend.messaging.RegionEventPublisher;
 import com.primo.worldgen_backend.service.RegionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,7 +16,8 @@ import java.util.List;
 public class RegionServiceImpl implements RegionService {
 
     private final RegionDAO regionDAO;
-
+    private final RegionEventPublisher publisher;
+    private final RegionMapper regionMapper;
     @Override
     public Region create(Region region) {
 
@@ -24,8 +28,12 @@ public class RegionServiceImpl implements RegionService {
             region.setEvents(List.of());
         }
         region.setAlive(true);
+        Region saved = regionDAO.save(region);
 
-        return regionDAO.save(region);
+
+        publisher.publishRegionUpdate(saved.getId(), regionMapper.toDTO(saved));
+
+        return saved;
     }
 
     @Override
@@ -43,8 +51,12 @@ public class RegionServiceImpl implements RegionService {
         existing.setFactions(region.getFactions());
         existing.setEvents(region.getEvents());
         existing.setAlive(region.isAlive());
+        Region saved = regionDAO.save(existing);
 
-        return regionDAO.save(existing);
+
+        publisher.publishRegionUpdate(saved.getId(), regionMapper.toDTO(saved));
+
+        return saved;
     }
 
     @Override
@@ -65,6 +77,27 @@ public class RegionServiceImpl implements RegionService {
     public void delete(Long id) {
         Region existing = findById(id);
         regionDAO.delete(existing);
+
+
+        RegionResponseDTO dto = RegionResponseDTO.builder()
+                .id(existing.getId())
+                .name("__DELETED__")
+                .lat(existing.getLat())
+                .lon(existing.getLon())
+                .population(existing.getPopulation())
+                .water(existing.getWater())
+                .food(existing.getFood())
+                .minerals(existing.getMinerals())
+                .alive(existing.isAlive())
+                
+                .build();
+
+        publisher.publishRegionUpdate(existing.getId(), dto);
+    }
+
+    @Override
+    public Region findByName(String name) {
+        return regionDAO.findByName(name);
     }
 }
 

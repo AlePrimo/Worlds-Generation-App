@@ -9,4 +9,5 @@ public interface RegionService {
     Region findById(Long id);
     List<Region> findAll();
     void delete(Long id);
+    Region findByName(String name);
 }

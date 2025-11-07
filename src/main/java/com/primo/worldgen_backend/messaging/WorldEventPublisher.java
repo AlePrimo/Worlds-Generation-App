@@ -23,4 +23,10 @@ public class WorldEventPublisher {
         String destination = "/topic/worlds";
         simpMessagingTemplate.convertAndSend(destination, dtos);
     }
+
+
+    public void publishWorldTick(Long worldId, long tickCount) {
+        String destination = "/topic/world." + worldId + ".tick";
+        simpMessagingTemplate.convertAndSend(destination, tickCount);
+    }
 }

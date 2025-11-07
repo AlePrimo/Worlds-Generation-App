@@ -40,7 +40,7 @@ public class SimulationEngine {
 
     public void tickSimulation() {
 
-        // 1️⃣ Avanzar el tiempo en todos los mundos
+
         List<World> worlds = worldService.findAll();
         for (World world : worlds) {
             world.setTicks(world.getTicks() + 1);
@@ -48,7 +48,7 @@ public class SimulationEngine {
             worldPublisher.publishWorldTick(world.getId(), world.getTicks());
         }
 
-        // 2️⃣ Procesar regiones
+
         List<Region> regions = regionService.findAll();
         for (Region region : regions) {
             simulateRegion(region);
@@ -56,17 +56,17 @@ public class SimulationEngine {
     }
 
     private void simulateRegion(Region region) {
-        // Obtener eventos activos
+
         List<Event> activeEvents = region.getEvents() == null ? List.of()
                 : region.getEvents().stream().filter(Event::isActive).collect(Collectors.toList());
 
-        // Límite de eventos activos
+
         if (activeEvents.size() >= MAX_ACTIVE_EVENTS_PER_REGION) return;
 
-        // Probabilidad de evento
+
         if (random.nextDouble() > EVENT_PROBABILITY) return;
 
-        // Crear un nuevo evento aleatorio
+
         String type = EVENT_TYPES[random.nextInt(EVENT_TYPES.length)];
         int severity = 1 + random.nextInt(10);
 

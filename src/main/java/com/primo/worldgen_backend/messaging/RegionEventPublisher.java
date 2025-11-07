@@ -1,5 +1,6 @@
 package com.primo.worldgen_backend.messaging;
 
+import com.primo.worldgen_backend.dto.events.EventResponseDTO;
 import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -21,8 +22,8 @@ public class RegionEventPublisher {
     }
 
 
-    public void publishRegionListUpdate(List<RegionResponseDTO> dtos) {
-        String destination = "/topic/regions";
-        simpMessagingTemplate.convertAndSend(destination, dtos);
+    public void publishRegionEvent(Long regionId, EventResponseDTO eventDto) {
+        String destination = "/topic/region." + regionId + ".events";
+        simpMessagingTemplate.convertAndSend(destination, eventDto);
     }
 }

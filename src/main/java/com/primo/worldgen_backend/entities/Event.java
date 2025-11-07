@@ -44,5 +44,10 @@ public class Event {
     @Schema(description = "Indica si el evento está activo", example = "true")
     private boolean active = true;
 
+    @Schema(description = "Region donde tuvo lugar el evento", example = "Catan")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "region_id", nullable = false)
+    private Region region;
+
 
 }

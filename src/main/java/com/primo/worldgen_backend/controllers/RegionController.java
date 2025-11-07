@@ -1,6 +1,5 @@
 package com.primo.worldgen_backend.controllers;
 
-
 import com.primo.worldgen_backend.dto.region.RegionRequestDTO;
 import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
 import com.primo.worldgen_backend.entities.Region;
@@ -18,10 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.util.List;
 import java.util.stream.Collectors;
-
 
 @RestController
 @RequestMapping("/api/regions")
@@ -39,20 +36,14 @@ public class RegionController {
     @Operation(summary = "Crear una región")
     public ResponseEntity<RegionResponseDTO> create(@Valid @RequestBody RegionRequestDTO dto) {
         Region region = regionMapper.toEntity(dto);
-
         World world = worldService.findByName(dto.getWorldName());
         region.setWorld(world);
+
         Region saved = regionService.create(region);
         RegionResponseDTO out = regionMapper.toDTO(saved);
 
 
         publisher.publishRegionUpdate(saved.getId(), out);
-
-        List<RegionResponseDTO> all = regionService.findAll()
-                .stream()
-                .map(regionMapper::toDTO)
-                .collect(Collectors.toList());
-        publisher.publishRegionListUpdate(all);
 
         return new ResponseEntity<>(out, HttpStatus.CREATED);
     }
@@ -84,20 +75,14 @@ public class RegionController {
 
         publisher.publishRegionUpdate(updated.getId(), out);
 
-        List<RegionResponseDTO> all = regionService.findAll()
-                .stream()
-                .map(regionMapper::toDTO)
-                .collect(Collectors.toList());
-        publisher.publishRegionListUpdate(all);
-
         return ResponseEntity.ok(out);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar región")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-
         Region existing = regionService.findById(id);
+
 
         RegionResponseDTO dto = RegionResponseDTO.builder()
                 .id(existing.getId())
@@ -108,19 +93,13 @@ public class RegionController {
                 .water(existing.getWater())
                 .food(existing.getFood())
                 .minerals(existing.getMinerals())
-                .alive(existing.isAlive())
+                .alive(false)
                 .build();
 
         regionService.delete(id);
 
-
+      
         publisher.publishRegionUpdate(existing.getId(), dto);
-
-        List<RegionResponseDTO> all = regionService.findAll()
-                .stream()
-                .map(regionMapper::toDTO)
-                .collect(Collectors.toList());
-        publisher.publishRegionListUpdate(all);
 
         return ResponseEntity.noContent().build();
     }

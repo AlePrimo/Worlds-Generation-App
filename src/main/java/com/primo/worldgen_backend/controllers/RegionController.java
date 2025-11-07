@@ -98,7 +98,7 @@ public class RegionController {
 
         regionService.delete(id);
 
-      
+
         publisher.publishRegionUpdate(existing.getId(), dto);
 
         return ResponseEntity.noContent().build();

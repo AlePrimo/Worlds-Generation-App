@@ -1,3 +1,8 @@
+-- ==========================================
+-- V1__init_tables.sql
+-- Estructura inicial coherente con entidades actuales
+-- ==========================================
+
 CREATE TABLE worlds (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
@@ -8,16 +13,16 @@ CREATE TABLE worlds (
 CREATE TABLE regions (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
-    lat DOUBLE PRECISION,
-    lon DOUBLE PRECISION,
+    lat DOUBLE PRECISION NOT NULL,
+    lon DOUBLE PRECISION NOT NULL,
     population INT CHECK (population >= 0),
     water DOUBLE PRECISION CHECK (water BETWEEN 0 AND 100),
     food DOUBLE PRECISION CHECK (food BETWEEN 0 AND 100),
     minerals DOUBLE PRECISION CHECK (minerals >= 0),
     alive BOOLEAN DEFAULT TRUE,
     world_id BIGINT NOT NULL,
-    CONSTRAINT fk_regions_world FOREIGN KEY(world_id)
-        REFERENCES worlds(id) ON DELETE CASCADE
+    CONSTRAINT fk_regions_world FOREIGN KEY (world_id)
+        REFERENCES worlds (id) ON DELETE CASCADE
 );
 
 CREATE TABLE factions (
@@ -27,8 +32,8 @@ CREATE TABLE factions (
     expansionism DOUBLE PRECISION CHECK (expansionism BETWEEN 0 AND 1),
     size INT CHECK (size >= 0),
     region_id BIGINT NOT NULL,
-    CONSTRAINT fk_factions_region FOREIGN KEY(region_id)
-        REFERENCES regions(id) ON DELETE CASCADE
+    CONSTRAINT fk_factions_region FOREIGN KEY (region_id)
+        REFERENCES regions (id) ON DELETE CASCADE
 );
 
 CREATE TABLE events (
@@ -39,6 +44,6 @@ CREATE TABLE events (
     severity INT CHECK (severity BETWEEN 1 AND 10),
     active BOOLEAN DEFAULT TRUE,
     region_id BIGINT NOT NULL,
-    CONSTRAINT fk_events_region FOREIGN KEY(region_id)
-        REFERENCES regions(id) ON DELETE CASCADE
+    CONSTRAINT fk_events_region FOREIGN KEY (region_id)
+        REFERENCES regions (id) ON DELETE CASCADE
 );

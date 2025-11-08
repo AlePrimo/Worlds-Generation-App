@@ -8,8 +8,12 @@ export default function RegionsPage({ pushNotification }) {
   const [regions, setRegions] = useState([])
 
   const load = async () => {
-    const r = await regionsApi.list()
-    setRegions(r)
+    try {
+      const r = await regionsApi.list()
+      setRegions(r)
+    } catch (e) {
+      console.error('Error cargando regiones', e)
+    }
   }
 
   useEffect(() => {
@@ -18,17 +22,21 @@ export default function RegionsPage({ pushNotification }) {
       subscribe('/topic/regions', data => {
         setRegions(data)
       })
-      // additionally subscribe to region events if desired
     })
-    // eslint-disable-next-line
   }, [])
 
-  const create = async (payload) => {
-    await regionsApi.create(payload)
-    await load()
+  const create = async payload => {
+    try {
+      await regionsApi.create(payload)
+      await load()
+      pushNotification({ text: `Región "${payload.name}" creada.` })
+    } catch (e) {
+      console.error(e)
+      alert('Error al crear la región.')
+    }
   }
 
-  const remove = async (id) => {
+  const remove = async id => {
     await regionsApi.remove(id)
     await load()
   }

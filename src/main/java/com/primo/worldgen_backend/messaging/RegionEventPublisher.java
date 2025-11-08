@@ -26,4 +26,11 @@ public class RegionEventPublisher {
         String destination = "/topic/region." + regionId + ".events";
         simpMessagingTemplate.convertAndSend(destination, eventDto);
     }
+
+
+    public void publishRegionNotification(String message) {
+        String destination = "/topic/regions.notifications";
+        simpMessagingTemplate.convertAndSend(destination, message);
+    }
+
 }

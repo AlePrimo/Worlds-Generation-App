@@ -44,6 +44,7 @@ public class RegionController {
 
 
         publisher.publishRegionUpdate(saved.getId(), out);
+        publisher.publishRegionNotification("Región creada: " + out.getName());
 
         return new ResponseEntity<>(out, HttpStatus.CREATED);
     }
@@ -100,7 +101,7 @@ public class RegionController {
 
 
         publisher.publishRegionUpdate(existing.getId(), dto);
-
+        publisher.publishRegionNotification("Región eliminada: " + dto.getName());
         return ResponseEntity.noContent().build();
     }
 }

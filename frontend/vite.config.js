@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    global: {}, // 👈 Soluciona el error de "global is not defined"
+  },
   server: {
     proxy: {
       '/api': 'http://localhost:8080',

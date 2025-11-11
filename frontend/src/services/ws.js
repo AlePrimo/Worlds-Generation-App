@@ -11,7 +11,7 @@ export function connect(onConnect) {
     return
   }
 
-  const sock = new SockJS('http://localhost:8080/ws') // 👈 forzamos URL absoluta
+  const sock = new SockJS('/ws')
   client = Stomp.over(sock)
   client.debug = () => {} // silenciar logs internos
 

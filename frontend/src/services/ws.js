@@ -26,10 +26,16 @@ export function subscribe(destination, handler) {
     return null
   }
   return client.subscribe(destination, msg => {
-    const body = msg.body ? JSON.parse(msg.body) : null
+    let body
+    try {
+      body = JSON.parse(msg.body)
+    } catch {
+      body = msg.body // si no es JSON, usar el texto directamente
+    }
     handler(body)
   })
 }
+
 
 export function disconnect() {
   if (client) {

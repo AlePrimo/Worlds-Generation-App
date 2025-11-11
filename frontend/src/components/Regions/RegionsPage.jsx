@@ -16,14 +16,28 @@ export default function RegionsPage({ pushNotification }) {
     }
   }
 
-  useEffect(() => {
-    load()
-    connect(client => {
-      subscribe('/topic/regions', data => {
-        setRegions(data)
-      })
+useEffect(() => {
+  load()
+  connect(client => {
+    subscribe('/topic/regions', data => {
+      setRegions(data)
     })
-  }, [])
+    // 🔽 NUEVO: escuchar notificaciones de regiones
+subscribe('/topic/regions.notifications', msg => {
+  if (!msg) return
+  if (typeof msg === 'string') {
+    pushNotification({ title: 'Actualización de Región', body: msg })
+  } else {
+    pushNotification({
+      title: msg.title ?? 'Actualización de Región',
+      body: msg.body ?? JSON.stringify(msg)
+    })
+  }
+})
+
+  // eslint-disable-next-line
+}, [])
+
 
   const create = async payload => {
     try {

@@ -12,32 +12,44 @@ export default function RegionsPage({ pushNotification }) {
       const r = await regionsApi.list()
       setRegions(r)
     } catch (e) {
-      console.error('Error cargando regiones', e)
+      console.error('❌ Error cargando regiones', e)
     }
   }
 
   useEffect(() => {
     load()
 
-    connect(client => {
-      // 🔹 Actualización de la lista de regiones en tiempo real (si backend lo emite)
-      subscribe('/topic/regions', data => {
-        if (Array.isArray(data)) setRegions(data)
+    connect((client) => {
+      console.log('✅ WS conectado (RegionsPage)')
+
+      // Actualizaciones de regiones
+      subscribe('/topic/regions', (data) => {
+        console.log('📦 WS recibió /topic/regions:', data)
+        if (Array.isArray(data)) {
+          setRegions(data)
+        }
       })
 
-      // 🔹 Escuchar notificaciones emitidas desde el backend
-      subscribe('/topic/regions.notifications', msg => {
+      // 🔔 Notificaciones
+      subscribe('/topic/regions.notifications', (msg) => {
+        console.log('📨 WS recibió /topic/regions.notifications:', msg)
+
         if (!msg) return
 
         if (typeof msg === 'string') {
           pushNotification({
             title: 'Actualización de Región',
-            body: msg
+            body: msg,
+          })
+        } else if (typeof msg === 'object') {
+          pushNotification({
+            title: msg.title ?? 'Actualización de Región',
+            body: msg.body ?? JSON.stringify(msg),
           })
         } else {
           pushNotification({
-            title: msg.title ?? 'Actualización de Región',
-            body: msg.body ?? JSON.stringify(msg)
+            title: 'Actualización de Región',
+            body: String(msg),
           })
         }
       })
@@ -46,25 +58,30 @@ export default function RegionsPage({ pushNotification }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const create = async payload => {
+  const create = async (payload) => {
     try {
       await regionsApi.create(payload)
       await load()
-      // 🔹 El backend ya envía una notificación por WebSocket, así que no repetimos
-      // Si querés mantener el mensaje local, podés descomentar la siguiente línea:
-      // pushNotification({ title: 'Región creada', body: `Región "${payload.name}" creada.` })
+      pushNotification({
+        title: 'Región creada (HTTP)',
+        body: `Región "${payload.name}" creada exitosamente.`,
+      })
     } catch (e) {
-      console.error(e)
+      console.error('❌ Error creando región', e)
       alert('Error al crear la región.')
     }
   }
 
-  const remove = async id => {
+  const remove = async (id) => {
     try {
       await regionsApi.remove(id)
       await load()
+      pushNotification({
+        title: 'Región eliminada (HTTP)',
+        body: `Se eliminó la región con ID ${id}.`,
+      })
     } catch (e) {
-      console.error(e)
+      console.error('❌ Error eliminando región', e)
       alert('Error al eliminar la región.')
     }
   }

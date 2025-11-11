@@ -9,15 +9,22 @@ export function connect(onConnect) {
     return
   }
 
-  const sock = new SockJS('/ws') // endpoint que registraste en backend
+  // 🔽 Forzamos la URL absoluta (para evitar errores de proxy)
+  const sock = new SockJS('http://localhost:8080/ws')
+
   client = Stomp.over(sock)
   client.debug = () => {} // desactivar logs
 
-  client.connect({}, () => {
-    onConnect(client)
-  }, (err) => {
-    console.error('WS connect error', err)
-  })
+  client.connect(
+    {},
+    () => {
+      console.log('✅ WS conectado')
+      onConnect(client)
+    },
+    (err) => {
+      console.error('❌ WS connect error', err)
+    }
+  )
 }
 
 export function subscribe(destination, handler) {
@@ -25,17 +32,17 @@ export function subscribe(destination, handler) {
     console.warn('WS client not connected')
     return null
   }
+
   return client.subscribe(destination, msg => {
     let body
     try {
       body = JSON.parse(msg.body)
     } catch {
-      body = msg.body // si no es JSON, usar el texto directamente
+      body = msg.body // si no es JSON, usar texto directamente
     }
     handler(body)
   })
 }
-
 
 export function disconnect() {
   if (client) {
@@ -43,3 +50,4 @@ export function disconnect() {
     client = null
   }
 }
+

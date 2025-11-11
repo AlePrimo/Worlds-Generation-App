@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   define: {
-    global: {}, // 👈 Soluciona el error de "global is not defined"
+    global: {}, // 👈 Soluciona "global is not defined"
   },
   server: {
     proxy: {
@@ -12,8 +12,9 @@ export default defineConfig({
       '/ws': {
         target: 'http://localhost:8080',
         ws: true,
-        changeOrigin: true
-      }
-    }
-  }
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })

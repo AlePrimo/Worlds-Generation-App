@@ -5,12 +5,12 @@ import com.primo.worldgen_backend.dto.world.WorldRequestDTO;
 import com.primo.worldgen_backend.dto.world.WorldResponseDTO;
 import com.primo.worldgen_backend.entities.World;
 import com.primo.worldgen_backend.mappers.WorldMapper;
+import com.primo.worldgen_backend.messaging.WorldEventPublisher;
 import com.primo.worldgen_backend.service.WorldService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,11 +20,12 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(WorldController.class)
-public class WorldControllerTest {
+class WorldControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -35,11 +36,14 @@ public class WorldControllerTest {
     @MockitoBean
     private WorldMapper worldMapper;
 
+    @MockitoBean
+    private WorldEventPublisher publisher;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     @Test
-    void createWorld_returnsCreatedAndBody() throws Exception {
+    void createWorld_returnsCreatedAndPublishesEvents() throws Exception {
         WorldRequestDTO req = WorldRequestDTO.builder().name("Test").build();
         World entity = World.builder().id(1L).name("Test").createdAt(Instant.now()).ticks(0).build();
         WorldResponseDTO resp = WorldResponseDTO.builder().id(1L).name("Test").createdAt(entity.getCreatedAt()).ticks(0).build();
@@ -47,6 +51,7 @@ public class WorldControllerTest {
         Mockito.when(worldMapper.toEntity(any(WorldRequestDTO.class))).thenReturn(entity);
         Mockito.when(worldService.create(any(World.class))).thenReturn(entity);
         Mockito.when(worldMapper.toDTO(any(World.class))).thenReturn(resp);
+        Mockito.when(worldService.findAll()).thenReturn(List.of(entity));
 
         mockMvc.perform(post("/api/worlds")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -54,6 +59,9 @@ public class WorldControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Test"));
+
+        verify(publisher).publishWorldUpdate(eq(1L), any(WorldResponseDTO.class));
+        verify(publisher).publishWorldListUpdate(anyList());
     }
 
     @Test
@@ -79,7 +87,6 @@ public class WorldControllerTest {
                 .andExpect(status().isInternalServerError());
     }
 
-
     @Test
     void list_returnsOk() throws Exception {
         World e = World.builder().id(3L).name("W3").createdAt(Instant.now()).ticks(1).build();
@@ -94,7 +101,7 @@ public class WorldControllerTest {
     }
 
     @Test
-    void update_returnsOk() throws Exception {
+    void update_returnsOkAndPublishesEvents() throws Exception {
         WorldRequestDTO req = WorldRequestDTO.builder().name("Updated").build();
         World in = World.builder().name("Updated").build();
         World out = World.builder().id(4L).name("Updated").createdAt(Instant.now()).ticks(2).build();
@@ -103,6 +110,7 @@ public class WorldControllerTest {
         Mockito.when(worldMapper.toEntity(any(WorldRequestDTO.class))).thenReturn(in);
         Mockito.when(worldService.update(eq(4L), any(World.class))).thenReturn(out);
         Mockito.when(worldMapper.toDTO(out)).thenReturn(resp);
+        Mockito.when(worldService.findAll()).thenReturn(List.of(out));
 
         mockMvc.perform(put("/api/worlds/4")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -110,12 +118,28 @@ public class WorldControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(4))
                 .andExpect(jsonPath("$.name").value("Updated"));
+
+        verify(publisher).publishWorldUpdate(eq(4L), any(WorldResponseDTO.class));
+        verify(publisher).publishWorldListUpdate(anyList());
     }
 
     @Test
-    void delete_returnsNoContent() throws Exception {
+    void delete_returnsNoContentAndPublishesEvents() throws Exception {
+        World existing = World.builder()
+                .id(5L)
+                .name("ToDelete")
+                .createdAt(Instant.now())
+                .ticks(10)
+                .build();
+
+        Mockito.when(worldService.findById(5L)).thenReturn(existing);
         willDoNothing().given(worldService).delete(5L);
+        Mockito.when(worldService.findAll()).thenReturn(List.of());
+
         mockMvc.perform(delete("/api/worlds/5"))
                 .andExpect(status().isNoContent());
+
+        verify(publisher).publishWorldUpdate(eq(5L), any(WorldResponseDTO.class));
+        verify(publisher).publishWorldListUpdate(anyList());
     }
 }

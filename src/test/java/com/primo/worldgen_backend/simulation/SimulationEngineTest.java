@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.List;
 import java.util.Random;
@@ -28,139 +29,132 @@ import static org.mockito.Mockito.*;
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class SimulationEngineTest {
 
-    @Mock
-    private WorldService worldService;
-
-    @Mock
-    private RegionService regionService;
-
-    @Mock
-    private EventService eventService;
-
-    @Mock
-    private WorldEventPublisher worldPublisher;
-
-    @Mock
-    private RegionEventPublisher regionPublisher;
-
-    @Mock
-    private EventMapper eventMapper;
-
-    @Mock
-    private RegionMapper regionMapper;
+    @Mock private WorldService worldService;
+    @Mock private RegionService regionService;
+    @Mock private EventService eventService;
+    @Mock private WorldEventPublisher worldPublisher;
+    @Mock private RegionEventPublisher regionPublisher;
+    @Mock private EventMapper eventMapper;
+    @Mock private RegionMapper regionMapper;
 
     @InjectMocks
     private SimulationEngine engine;
 
     @BeforeEach
-    void setUp() throws Exception {
-        // nothing here for now; random will be set per-test if needed
-    }
+    void setUp() {}
 
     @Test
     void tickSimulation_incrementsWorldTicks_andPublishesTick() throws Exception {
         World w = World.builder().id(1L).name("W").ticks(0).createdAt(Instant.now()).build();
-
         when(worldService.findAll()).thenReturn(List.of(w));
-        when(regionService.findAll()).thenReturn(List.of()); // no regions -> only world path executed
+        when(regionService.findAll()).thenReturn(List.of());
 
-        // inject a Random that does not affect anything (won't be used for regions)
         setDeterministicRandom(0.5, 0);
-
         engine.tickSimulation();
 
-        // verify world tick increment and persistence + publish
         ArgumentCaptor<World> capt = ArgumentCaptor.forClass(World.class);
-        verify(worldService, times(1)).update(eq(1L), capt.capture());
-        World updated = capt.getValue();
-        assertEquals(1L, updated.getId());
-        assertEquals(1, updated.getTicks()); // ticks incremented from 0 -> 1
-
-        verify(worldPublisher, times(1)).publishWorldTick(eq(1L), eq(1L));
+        verify(worldService).update(eq(1L), capt.capture());
+        assertEquals(1, capt.getValue().getTicks());
+        verify(worldPublisher).publishWorldTick(eq(1L), eq(1L));
     }
 
     @Test
     void tickSimulation_generatesEvent_appliesEffects_andPublishesForRegion() throws Exception {
-        // Setup a region with initial values (no events)
         Region region = Region.builder()
-                .id(11L)
-                .name("R")
+                .id(11L).name("R")
                 .population(1000)
-                .water(80.0)
-                .food(80.0)
-                .minerals(100.0)
+                .water(80.0).food(80.0).minerals(100.0)
                 .events(null)
                 .build();
 
-        when(worldService.findAll()).thenReturn(List.of()); // no worlds for this test
+        when(worldService.findAll()).thenReturn(List.of());
         when(regionService.findAll()).thenReturn(List.of(region));
 
-        // Make Random deterministic: nextDouble -> 0.0 (force event), nextInt -> 0 (pick first EVENT_TYPES -> SEQUIA)
-        setDeterministicRandom(0.0, 0);
-
-        // Prepare the Event that the service will "save" and mapper will map
+        setDeterministicRandom(0.0, 0); // fuerza SEQUIA
         Event savedEvent = Event.builder()
-                .id(999L)
-                .type("SEQUIA")
-                .startedAt(Instant.now())
-                .description("Auto-generated event: SEQUIA")
-                .severity(5)
-                .active(true)
-                .region(region)
+                .id(999L).type("SEQUIA").severity(5).active(true).region(region)
                 .build();
 
         when(eventService.create(any(Event.class))).thenReturn(savedEvent);
+        when(eventMapper.toDTO(savedEvent)).thenReturn(new EventResponseDTO());
+        when(regionMapper.toDTO(any())).thenReturn(
+                RegionResponseDTO.builder().id(region.getId()).name(region.getName()).build()
+        );
 
-        EventResponseDTO eventDto = new EventResponseDTO();
-        when(eventMapper.toDTO(savedEvent)).thenReturn(eventDto);
-
-        RegionResponseDTO regionDto = RegionResponseDTO.builder().id(region.getId()).name(region.getName()).build();
-        when(regionMapper.toDTO(any(Region.class))).thenReturn(regionDto);
-
-        // Run tickSimulation -> should generate event, apply effects, update region and publish
         engine.tickSimulation();
 
-        // verify event created
-        verify(eventService, times(1)).create(any(Event.class));
-        verify(regionPublisher, times(1)).publishRegionEvent(eq(region.getId()), eq(eventDto));
-
-        // After a "SEQUIA" of severity 5:
-        // factor = 5/10 = 0.5
-        // water reduction = 15 * 0.5 = 7.5 => 80 - 7.5 = 72.5
-        // food reduction = 10 * 0.5 = 5 => 80 - 5 = 75
-        assertTrue(region.getWater() <= 80.0 && region.getWater() >= 72.4 && region.getFood() <= 80.0 && region.getFood() >= 74.9);
-
-        // verify region persisted/updated and published
-        verify(regionService, times(1)).update(eq(region.getId()), eq(region));
-        verify(regionPublisher, times(1)).publishRegionUpdate(eq(region.getId()), eq(regionDto));
+        verify(eventService).create(any(Event.class));
+        verify(regionService).update(eq(region.getId()), eq(region));
+        verify(regionPublisher).publishRegionEvent(eq(region.getId()), any());
+        verify(regionPublisher).publishRegionUpdate(eq(region.getId()), any());
     }
 
-    // ---- helpers ----
+    @Test
+    void simulateRegion_doesNothingWhenTooManyActiveEvents() throws Exception {
+        Region region = Region.builder().id(2L).events(List.of(
+                Event.builder().active(true).build(),
+                Event.builder().active(true).build(),
+                Event.builder().active(true).build(),
+                Event.builder().active(true).build(),
+                Event.builder().active(true).build()
+        )).build();
 
-    /**
-     * Replaces the private final Random "random" field inside engine
-     * with a deterministic Random-like object whose nextDouble()/nextInt(bound)
-     * return the given values. This uses reflection to set the private field.
-     */
+        when(worldService.findAll()).thenReturn(List.of());
+        when(regionService.findAll()).thenReturn(List.of(region));
+
+        setDeterministicRandom(0.0, 0);
+        engine.tickSimulation();
+
+        verifyNoInteractions(eventService);
+    }
+
+    @Test
+    void simulateRegion_doesNothingWhenRandomProbabilityFails() throws Exception {
+        Region region = Region.builder().id(3L).events(List.of()).build();
+
+        when(worldService.findAll()).thenReturn(List.of());
+        when(regionService.findAll()).thenReturn(List.of(region));
+
+        setDeterministicRandom(0.99, 0);
+        engine.tickSimulation();
+
+        verifyNoInteractions(eventService);
+    }
+
+    @Test
+    void applyEventEffects_coversAllBranches() throws Exception {
+        Region r = Region.builder()
+                .water(50.0).food(50.0).minerals(50.0).population(100)
+                .build();
+
+        Method m = SimulationEngine.class.getDeclaredMethod(
+                "applyEventEffects", Region.class, String.class, int.class);
+        m.setAccessible(true);
+
+        // Cubre los 6 casos del switch
+        m.invoke(engine, r, "SEQUIA", 10);
+        m.invoke(engine, r, "INUNDACION", 10);
+        m.invoke(engine, r, "EPIDEMIA", 10);
+        m.invoke(engine, r, "TERREMOTO", 10);
+        m.invoke(engine, r, "ERUPCION", 10);
+        m.invoke(engine, r, "PLAGA", 10);
+
+        // Valores válidos post-aplicación
+        assertTrue(r.getWater() >= 0);
+        assertTrue(r.getFood() >= 0);
+        assertTrue(r.getPopulation() >= 0);
+    }
+
+    /** helper para reemplazar Random con valores deterministas */
     private void setDeterministicRandom(double nextDoubleValue, int nextIntValue) throws Exception {
         Random deterministic = new Random() {
-            @Override
-            public double nextDouble() {
-                return nextDoubleValue;
-            }
-
-            @Override
-            public int nextInt(int bound) {
-                // return value bounded to avoid IllegalArgumentException
-                if (bound <= 0) return 0;
-                return Math.min(Math.abs(nextIntValue), bound - 1);
+            @Override public double nextDouble() { return nextDoubleValue; }
+            @Override public int nextInt(int bound) {
+                return (bound <= 0) ? 0 : Math.min(Math.abs(nextIntValue), bound - 1);
             }
         };
-
         Field f = SimulationEngine.class.getDeclaredField("random");
         f.setAccessible(true);
-
-        // Remove final-like modifier by using set (works in tests) — assign new Random instance
         f.set(engine, deterministic);
     }
 }

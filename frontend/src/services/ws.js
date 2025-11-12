@@ -11,9 +11,11 @@ export function connect(onConnect) {
     return
   }
 
-  const sock = new SockJS('/ws')
+  // 👇 Usa backend directo, no proxy de Vite
+  const sock = new SockJS('http://localhost:8080/ws')
+
   client = Stomp.over(sock)
-  client.debug = () => {} // silenciar logs internos
+  client.debug = () => {}
 
   client.connect(
     {},
@@ -27,7 +29,7 @@ export function connect(onConnect) {
     (err) => {
       connected = false
       console.error('❌ WS connect error', err)
-      setTimeout(() => connect(onConnect), 5000) // 👈 reintento automático
+      setTimeout(() => connect(onConnect), 5000)
     }
   )
 }
@@ -44,7 +46,7 @@ export function subscribe(destination, handler) {
     try {
       body = JSON.parse(msg.body)
     } catch {
-      body = msg.body // texto plano
+      body = msg.body
     }
     console.log(`📨 Mensaje recibido de ${destination}:`, body)
     handler(body)
@@ -60,5 +62,6 @@ export function disconnect() {
     })
   }
 }
+
 
 

@@ -6,13 +6,13 @@ import com.primo.worldgen_backend.dto.region.RegionResponseDTO;
 import com.primo.worldgen_backend.entities.Region;
 import com.primo.worldgen_backend.entities.World;
 import com.primo.worldgen_backend.mappers.RegionMapper;
+import com.primo.worldgen_backend.messaging.RegionEventPublisher;
 import com.primo.worldgen_backend.service.RegionService;
 import com.primo.worldgen_backend.service.WorldService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,11 +21,12 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RegionController.class)
-public class RegionControllerTest {
+class RegionControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,11 +40,14 @@ public class RegionControllerTest {
     @MockitoBean
     private WorldService worldService;
 
+    @MockitoBean
+    private RegionEventPublisher publisher;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     @Test
-    void createRegion_returnsCreated() throws Exception {
+    void createRegion_returnsCreatedAndPublishesEvents() throws Exception {
         RegionRequestDTO req = RegionRequestDTO.builder()
                 .name("R1")
                 .lat(-10)
@@ -56,21 +60,23 @@ public class RegionControllerTest {
                 .worldName("Earth")
                 .build();
 
-        Region entity = Region.builder().id(1L).name("R1").build();
+        World world = World.builder().id(10L).name("Earth").build();
+        Region region = Region.builder().id(1L).name("R1").world(world).build();
         RegionResponseDTO resp = RegionResponseDTO.builder().id(1L).name("R1").build();
 
-        World world = World.builder().id(10L).name("Earth").build();
-
-        Mockito.when(regionMapper.toEntity(any(RegionRequestDTO.class))).thenReturn(entity);
+        Mockito.when(regionMapper.toEntity(any(RegionRequestDTO.class))).thenReturn(region);
         Mockito.when(worldService.findByName("Earth")).thenReturn(world);
-        Mockito.when(regionService.create(any(Region.class))).thenReturn(entity);
-        Mockito.when(regionMapper.toDTO(any(Region.class))).thenReturn(resp);
+        Mockito.when(regionService.create(any(Region.class))).thenReturn(region);
+        Mockito.when(regionMapper.toDTO(region)).thenReturn(resp);
 
         mockMvc.perform(post("/api/regions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1));
+
+        verify(publisher).publishRegionUpdate(eq(1L), any(RegionResponseDTO.class));
+        verify(publisher).publishRegionNotification(contains("Región creada"));
     }
 
     @Test
@@ -87,7 +93,7 @@ public class RegionControllerTest {
     }
 
     @Test
-    void getById_notFound_returns500() throws Exception {
+    void getById_throwsException_returns500() throws Exception {
         Mockito.when(regionService.findById(99L))
                 .thenThrow(new RuntimeException("Region not found with id 99"));
 
@@ -109,7 +115,7 @@ public class RegionControllerTest {
     }
 
     @Test
-    void update_returnsOk() throws Exception {
+    void update_returnsOkAndPublishesEvent() throws Exception {
         RegionRequestDTO req = RegionRequestDTO.builder()
                 .name("Rupdated")
                 .lat(1)
@@ -135,12 +141,30 @@ public class RegionControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(4));
+
+        verify(publisher).publishRegionUpdate(eq(4L), any(RegionResponseDTO.class));
     }
 
     @Test
-    void delete_returnsNoContent() throws Exception {
+    void delete_returnsNoContentAndPublishesNotification() throws Exception {
+        Region existing = Region.builder()
+                .id(5L)
+                .name("ToDelete")
+                .lat(1).lon(2)
+                .population(100)
+                .water(10)
+                .food(10)
+                .minerals(5)
+                .alive(true)
+                .build();
+
+        Mockito.when(regionService.findById(5L)).thenReturn(existing);
         willDoNothing().given(regionService).delete(5L);
+
         mockMvc.perform(delete("/api/regions/5"))
                 .andExpect(status().isNoContent());
+
+        verify(publisher).publishRegionUpdate(eq(5L), any(RegionResponseDTO.class));
+        verify(publisher).publishRegionNotification(contains("Región eliminada"));
     }
 }

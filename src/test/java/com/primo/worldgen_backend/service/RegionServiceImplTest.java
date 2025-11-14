@@ -116,4 +116,32 @@ public class RegionServiceImplTest {
 
         verify(regionDAO).delete(existing);
     }
+
+
+    @Test
+    void findByName_returnsRegion() {
+        Region region = Region.builder().id(5L).name("TestRegion").build();
+        when(regionDAO.findByName("TestRegion")).thenReturn(region);
+
+        Region result = regionService.findByName("TestRegion");
+
+        assertEquals(region, result);
+        verify(regionDAO).findByName("TestRegion");
+    }
+
+    @Test
+    void saveInternal_savesAndReturnsRegion() {
+        Region region = Region.builder().id(10L).name("Internal").build();
+        when(regionDAO.save(region)).thenReturn(region);
+
+        Region result = regionService.saveInternal(region);
+
+        assertEquals(region, result);
+        verify(regionDAO).save(region);
+    }
+
+
+
+
+
 }

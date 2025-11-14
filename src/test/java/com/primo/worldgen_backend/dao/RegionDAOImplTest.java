@@ -77,4 +77,23 @@ class RegionDAOImplTest {
 
         verify(regionRepository, times(1)).delete(region);
     }
+
+    @Test
+    void findByName_delegatesToRepository() {
+        Region region = new Region();
+        when(regionRepository.findByName("TestRegion")).thenReturn(region);
+
+        Region result = regionDAO.findByName("TestRegion");
+
+        assertEquals(region, result);
+        verify(regionRepository, times(1)).findByName("TestRegion");
+    }
+
+
+
+
+
+
+
+
 }
